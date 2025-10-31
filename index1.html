@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title> Movie_to_soundtrack
+
+        </title>
+    </head>
+<body>
+    <h2>Type a movie or soundtrack below.
+
+    </h2>
+    <input type="text" id="searchBox">
+    <button onclick="searchBoth()">Search
+
+    </button>
+
+    <div id="movieResults">
+
+    </div>
+<script>
+    const tmdbToken = "71421e241b142b2835dc1fcd3e8e5327";
+    const spotifyToken = "1POdFZRZbvb...qqillRxMr2z";
+
+    function searchBoth()
+    {
+        const userResponse = document.getElementById("searchBox").value;
+    
+
+        const movieLink = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbToken}&query=${encodeURIComponent(userResponse)}`;
+
+        fetch(movieLink)
+            .then(response => response.json())
+            .then(data => displayMovie(data))
+            .catch(error => {
+                console.error("Movie couldn't be found.", error);
+                document.getElementById("movieResults").textContent = "Error loading data";});
+    }
+
+    function displayMovie(data)
+                {
+                    const movieDis = document.getElementById("movieResults");
+
+                    if(data.results && data.results.length > 0)
+                    {
+                        const movie = data.results[0];
+                        movieDis.innerHTML = 
+                        `<h3>${movie.title}</h3>
+                        <p>${movie.overview || "No description available."}</p> 
+                        <img src="https://image.tmdb.org/t/p/w200${movie.poster_path}" alt="none">`;
+                    }
+                    else
+                    {
+                        movieDis.textContent = "Couldn't find movie.";
+                    }
+                }
+</script>
+</body>
+</html>
