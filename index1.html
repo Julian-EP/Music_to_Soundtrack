@@ -32,8 +32,7 @@
             .then(response => response.json())
             .then(data => displayMovie(data))
             .catch(error => {
-                console.error("Movie couldn't be found.", error);
-                document.getElementById("movieResults").textContent = "Error loading data";});
+                console.error("Movie couldn't be found.", error)});
     }
 
     function displayMovie(data)
@@ -42,11 +41,11 @@
 
                     if(data.results && data.results.length > 0)
                     {
-                        const movie = data.results[0];
-                        movieDis.innerHTML = 
-                        `<h3>${movie.title}</h3>
-                        <p>${movie.overview || "No description available."}</p> 
-                        <img src="https://image.tmdb.org/t/p/w200${movie.poster_path}" alt="none">`;
+                        for(let i = 0; i < 5; i++)
+                        {
+                            const movie = data.results[i];
+                            movieDis.innerHTML += `<div> <h3>${movie.title}</h3> <p>${movie.overview || "No description available."}</p> <p>${movie.release_date}</p> <img src="https://image.tmdb.org/t/p/w200${movie.poster_path}" alt="poster not found"> </div>`;
+                        }
                     }
                     else
                     {
