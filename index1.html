@@ -17,6 +17,11 @@
     <div id="movieResults">
 
     </div>
+
+    <div id="spotifySoundtrack">
+
+    </div>
+
 <script>
     const tmdbToken = "71421e241b142b2835dc1fcd3e8e5327";
     const spotifyToken = "1POdFZRZbvb...qqillRxMr2z";
@@ -45,6 +50,7 @@
                         {
                             const movie = data.results[i];
                             movieDis.innerHTML += `<div> <h3>${movie.title}</h3> <p>${movie.overview}</p> <p>${movie.release_date}</p> <img src="https://image.tmdb.org/t/p/w200${movie.poster_path}" alt="poster not found"> </div>`;
+
                         }
                     }
                     else
@@ -52,6 +58,33 @@
                         movieDis.textContent = "Couldn't find movie.";
                     }
                 }
+                
+    const spotifyLink = `https://api.spotify.com/v1/search?q=${encodeURIComponent(movie.title)}&type=track&limit=3`;    
+                
+    fetch(spotifyLink, {
+        headers:{Authorization: `Bearer ${spotifyToken}`}
+    })
+        .then(response => response.json())
+        .then(soundtrackdata => spotifyPreview(soundtrackdata))
+        .catch((error) => {console.error("Soundtrack couldn't be found.", error);});
+                
+    function spotifyPreview(soundtrackdata){
+    const previewSoundtrack = document.getElementById("spotifySoundtrack");
+                    
+    if(soundtrackdata.tracks && soundtrackdata.tracks.items.length > 0)
+                {
+        const track = soundtrackdata.tracks.items[0];
+        const trackName = track.name;
+        const previewUrl = track.preview_url;
+
+        previewSoundtrack.innerHTML += `<h3>${trackName}</h3> ${previewUrl ? `<audio controls src ="${previewUrl}"></audio>`: "<p>No preview.</p>"}`;
+    }
+    else
+    {
+        previewSoundtrack.textContent = "Soundtrack unavailable.";
+    }
+    } 
+
 </script>
 </body>
 </html>
