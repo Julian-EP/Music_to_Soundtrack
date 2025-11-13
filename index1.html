@@ -44,7 +44,7 @@
                         for(let i = 0; i < 5; i++)
                         {
                             const movie = data.results[i];
-                            movieDis.innerHTML += `<div> <h3>${movie.title}</h3> <p>${movie.overview || "No description available."}</p> <p>${movie.release_date}</p> <img src="https://image.tmdb.org/t/p/w200${movie.poster_path}" alt="poster not found"> </div>`;
+                            movieDis.innerHTML += `<div> <h3>${movie.title}</h3> <p>${movie.overview}</p> <p>${movie.release_date}</p> <img src="https://image.tmdb.org/t/p/w200${movie.poster_path}" alt="poster not found"> </div>`;
                         }
                     }
                     else
