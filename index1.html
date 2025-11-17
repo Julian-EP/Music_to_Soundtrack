@@ -1,90 +1,250 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title> Movie_to_soundtrack
+<head>
+  <title>Movie-to-Soundtrack Finder</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
 
-        </title>
-    </head>
+    h1 { color: #00acee; }
+
+    input {
+      padding: 10px;
+      width: 250px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      margin-right: 10px;
+    }
+
+    button {
+      padding: 10px 16px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #00acee;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover { background-color: #008ec1; }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      text-align: left;
+    }
+
+    .movie-card {
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .movie-poster {
+      width: 200px;
+      border-radius: 8px;
+    }
+
+    .movie-info { flex: 1; }
+
+    #youtubeResults {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .video-card {
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 6px 10px;
+      margin: 5px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      flex: 1 1 45%;
+      min-width: 250px;
+    }
+
+    .video-card p {
+      font-size: 14px;
+      flex: 1;
+      margin: 0;
+      color: #ddd;
+    }
+
+    iframe {
+      border-radius: 6px;
+      width: 160px;
+      height: 90px;
+    }
+
+    h2 {
+      color: #00acee;
+      border-bottom: 2px solid #00acee;
+      padding-bottom: 5px;
+    }
+
+    footer {
+      margin-top: 40px;
+      color: #888;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
 <body>
-    <h2>Type a movie or soundtrack below.
+  <h1>🎬 Movie-to-Soundtrack Finder</h1>
+  <p>Search any movie.</p>
 
-    </h2>
-    <input type="text" id="searchBox">
-    <button onclick="searchBoth()">Search
+  <input type="text" id="searchBox" placeholder="Enter a movie title...">
+  <button onclick="searchMovie()">Search</button>
 
-    </button>
+  <div class="container">
+    <div id="movieResults"></div>
+  </div>
 
-    <div id="movieResults">
+  <footer>
+    Powered by TMDb & YouTube APIs — for educational use only
+  </footer>
 
-    </div>
+  <script>
+    const tmdbKey = "71421e241b142b2835dc1fcd3e8e5327";
+    const ytKey   = "AIzaSyDKLqX_llwkh0y22s7s68m7BGSrQZy3Kcw";
 
-    <div id="spotifySoundtrack">
+    function searchMovie() {
+      const query = document.getElementById("searchBox").value.trim();
+      const movieDiv = document.getElementById("movieResults");
+      movieDiv.innerHTML = "";
 
-    </div>
+      if (!query) {
+        movieDiv.innerHTML = "<p>Please type a movie title.</p>";
+        return;
+      }
 
-<script>
-    const tmdbToken = "71421e241b142b2835dc1fcd3e8e5327";
-    const spotifyToken = "1POdFZRZbvb...qqillRxMr2z";
+      const tmdbUrl = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbKey}&query=${encodeURIComponent(query)}`;
 
-    function searchBoth()
-    {
-        const userResponse = document.getElementById("searchBox").value;
-    
+      fetch(tmdbUrl)
+        .then(r => r.json())
+        .then(data => {
+          if (!data.results || data.results.length === 0) {
+            movieDiv.innerHTML = "<p>No movie found.</p>";
+            return;
+          }
 
-        const movieLink = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbToken}&query=${encodeURIComponent(userResponse)}`;
+          const movie = data.results[0];
+          const poster = movie.poster_path
+            ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
+            : "https://via.placeholder.com/300x450?text=No+Poster";
 
-        fetch(movieLink)
-            .then(response => response.json())
-            .then(data => displayMovie(data))
-            .catch(error => {
-                console.error("Movie couldn't be found.", error)});
+          movieDiv.innerHTML = `
+            <div class="movie-card">
+              <img src="${poster}" class="movie-poster">
+              <div class="movie-info">
+                <h2>${movie.title}</h2>
+                <p><strong>Release:</strong> ${movie.release_date || "Unknown"}</p>
+                <p>${movie.overview || "No description available."}</p>
+                <div id="trailerSection"></div>
+                <div id="youtubeResults"></div>
+              </div>
+            </div>
+          `;
+
+          getTrailer(movie.id);
+          searchYouTubeSoundtrack(movie.title);
+        })
+        .catch(err => {
+          console.error("Error loading TMDb:", err);
+          movieDiv.textContent = "Error loading movie info.";
+        });
     }
 
-    function displayMovie(data)
-                {
-                    const movieDis = document.getElementById("movieResults");
+    // 🎞️ Trailer
+    function getTrailer(movieId) {
+      const trailerDiv = document.getElementById("trailerSection");
+      trailerDiv.innerHTML = "<h3>🎞️ Trailer</h3><p>Loading...</p>";
 
-                    if(data.results && data.results.length > 0)
-                    {
-                        for(let i = 0; i < 5; i++)
-                        {
-                            const movie = data.results[i];
-                            movieDis.innerHTML += `<div> <h3>${movie.title}</h3> <p>${movie.overview}</p> <p>${movie.release_date}</p> <img src="https://image.tmdb.org/t/p/w200${movie.poster_path}" alt="poster not found"> </div>`;
+      const trailerUrl = `https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${tmdbKey}`;
 
-                        }
-                    }
-                    else
-                    {
-                        movieDis.textContent = "Couldn't find movie.";
-                    }
-                }
-                
-    const spotifyLink = `https://api.spotify.com/v1/search?q=${encodeURIComponent(movie.title)}&type=track&limit=3`;    
-                
-    fetch(spotifyLink, {
-        headers:{Authorization: `Bearer ${spotifyToken}`}
-    })
-        .then(response => response.json())
-        .then(soundtrackdata => spotifyPreview(soundtrackdata))
-        .catch((error) => {console.error("Soundtrack couldn't be found.", error);});
-                
-    function spotifyPreview(soundtrackdata){
-    const previewSoundtrack = document.getElementById("spotifySoundtrack");
-                    
-    if(soundtrackdata.tracks && soundtrackdata.tracks.items.length > 0)
-                {
-        const track = soundtrackdata.tracks.items[0];
-        const trackName = track.name;
-        const previewUrl = track.preview_url;
-
-        previewSoundtrack.innerHTML += `<h3>${trackName}</h3> ${previewUrl ? `<audio controls src ="${previewUrl}"></audio>`: "<p>No preview.</p>"}`;
+      fetch(trailerUrl)
+        .then(res => res.json())
+        .then(data => {
+          const trailer = data.results.find(v => v.site === "YouTube" && v.type === "Trailer");
+          if (trailer) {
+            trailerDiv.innerHTML = `
+              <h3>🎞️ Trailer</h3>
+              <iframe
+                src="https://www.youtube.com/embed/${trailer.key}?modestbranding=1&controls=1"
+                frameborder="0" allowfullscreen>
+              </iframe>
+            `;
+          } else {
+            trailerDiv.innerHTML = "<p>No trailer found.</p>";
+          }
+        })
+        .catch(err => {
+          console.error("Error loading trailer:", err);
+          trailerDiv.innerHTML = "<p>Error loading trailer.</p>";
+        });
     }
-    else
-    {
-        previewSoundtrack.textContent = "Soundtrack unavailable.";
-    }
-    } 
 
-</script>
+    // 🎧 Two YouTube Soundtracks
+    function searchYouTubeSoundtrack(title) {
+      const ytDiv = document.getElementById("youtubeResults");
+      ytDiv.innerHTML = "<p>Loading soundtrack...</p>";
+
+      const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(title + " original motion picture soundtrack")}&maxResults=2&type=video&key=${ytKey}`;
+
+      fetch(ytUrl)
+        .then(r => r.json())
+        .then(videos => {
+          if (!videos.items || videos.items.length === 0) {
+            const retryUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(title + " OST")}&maxResults=2&type=video&key=${ytKey}`;
+            return fetch(retryUrl).then(r => r.json());
+          }
+          return videos;
+        })
+        .then(videos => {
+          if (!videos.items || videos.items.length === 0) {
+            ytDiv.innerHTML = "<p>No soundtrack videos found.</p>";
+            return;
+          }
+
+          ytDiv.innerHTML = "<h3>🎧 YouTube Soundtracks</h3>";
+
+          videos.items.forEach(video => {
+            const vid = video.id.videoId;
+            const vtitle = video.snippet.title;
+            ytDiv.innerHTML += `
+              <div class="video-card">
+                <p>${vtitle}</p>
+                <iframe
+                  src="https://www.youtube.com/embed/${vid}?modestbranding=1&controls=1"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen>
+                </iframe>
+              </div>
+            `;
+          });
+        })
+        .catch(err => {
+          console.error("Error loading YouTube:", err);
+          ytDiv.textContent = "Error loading soundtrack videos.";
+        });
+    }
+  </script>
 </body>
 </html>
