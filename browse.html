@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Browse Movies</title>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      margin: 0;
+    }
+
+    h1 { color: #00acee; }
+
+    /* Back Button */
+    .back-btn {
+      background: #444;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-bottom: 20px;
+    }
+    .back-btn:hover {
+      background: #555;
+      transform: translateY(-2px);
+    }
+
+    /* Category Buttons */
+    .category-btn {
+      background: #00acee;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      color: #fff;
+      margin: 5px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 14px;
+    }
+    .category-btn:hover {
+      background: #008ec1;
+      transform: translateY(-1px);
+    }
+
+    /* Movie Grid — Smaller Items */
+    #movieGrid {
+      margin-top: 25px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 15px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Compact Movie Cards */
+    .movie-card {
+      background: #1e1e1e;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.3);
+      transition: 0.25s;
+      cursor: pointer;
+    }
+    .movie-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0px 6px 14px rgba(0,0,0,0.4);
+    }
+
+    .movie-card img {
+      width: 100%;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .movie-card h3 {
+      font-size: 14px;
+      margin: 4px 0;
+      color: #00acee;
+    }
+
+    .movie-card p {
+      margin: 0 0 8px;
+      font-size: 12px;
+      color: #ccc;
+    }
+
+    .details-btn {
+      background: #00acee;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-size: 12px;
+      transition: 0.2s;
+    }
+    .details-btn:hover {
+      background: #008ec1;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <button class="back-btn" onclick="window.location.href='index1.html'">
+    🔍 Back to Search
+  </button>
+
+  <h1>Browse Movies</h1>
+  <p>Choose a category:</p>
+
+  <button class="category-btn" onclick="loadCategory('popular')">Popular</button>
+  <button class="category-btn" onclick="loadCategory('top_rated')">Top Rated</button>
+  <button class="category-btn" onclick="loadCategory('now_playing')">Now Playing</button>
+  <button class="category-btn" onclick="loadCategory('upcoming')">Upcoming</button>
+
+  <div id="movieGrid"></div>
+
+<script>
+const tmdbKey = "71421e241b142b2835dc1fcd3e8e5327";
+
+/* Small, compact cards */
+async function loadCategory(cat) {
+  const grid = document.getElementById("movieGrid");
+  grid.innerHTML = "<p>Loading...</p>";
+
+  const res = await fetch(`https://api.themoviedb.org/3/movie/${cat}?api_key=${tmdbKey}`);
+  const data = await res.json();
+
+  grid.innerHTML = "";
+
+  data.results.forEach(movie => {
+    const poster = movie.poster_path
+      ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
+      : "https://via.placeholder.com/200x300?text=No+Poster";
+
+    grid.innerHTML += `
+  <div class="movie-card">
+    <img src="${poster}">
+    <h3>${movie.title}</h3>
+
+    <p>${movie.release_date || "Unknown"}</p>
+
+    <p style="color:#FFD700; font-size:13px; margin:6px 0;">
+      ⭐ ${movie.vote_average.toFixed(1)} / 10
+    </p>
+
+    <button class="details-btn"
+      onclick="goToIndex(${movie.id},
+        '${encodeURIComponent(movie.title)}',
+        '${encodeURIComponent(movie.overview)}',
+        '${encodeURIComponent(poster)}',
+        '${encodeURIComponent(movie.vote_average)}',
+        '${movie.release_date}')">
+      Details
+    </button>
+  </div>
+`;
+
+  });
+}
+
+/* Send poster too */
+function goToIndex(id, title, overview, poster, rating, date) {
+  window.location.href =
+    `index1.html?id=${id}&title=${title}&overview=${overview}&poster=${poster}&rating=${rating}&date=${date}`;
+}
+</script>
+
+</body>
+</html>
